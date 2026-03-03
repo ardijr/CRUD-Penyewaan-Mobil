@@ -1,18 +1,16 @@
-# SISTEM CRUD RENTAL MOBIL
+import mysql.connector
 
+# ================== KONEKSI DATABASE ==================
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="ardijr123",
+    database="rental_mobil"
+)
 
-data_mobil = [
-    {"kode": "M01", "nama": "Toyota Avanza", "warna": "Hitam", "harga": 475000, "status": "Tersedia"},
-    {"kode": "M02", "nama": "Honda Brio", "warna": "Putih", "harga": 375000, "status": "Tersedia"},
-    {"kode": "M03", "nama": "Suzuki Ertiga", "warna": "Silver", "harga": 450000, "status": "Tersedia"},
-    {"kode": "M04", "nama": "Mitsubishi Pajero", "warna": "Hitam", "harga": 900000, "status": "Disewa"},
-    {"kode": "M05", "nama": "Toyota Fortuner", "warna": "Putih", "harga": 850000, "status": "Tersedia"}
-]
+cursor = db.cursor(dictionary=True)
 
-akun = {
-    "admin": {"password": "admin123", "role": "admin"},
-    "user": {"password": "ardi123", "role": "user"}
-}
+# ================== TAMPILKAN TABEL ==================
 def tampilkan_tabel(data):
     if not data:
         print("Data kosong.")
@@ -27,227 +25,207 @@ def tampilkan_tabel(data):
 
     print("=" * 95)
 
-
-# LOGIN 
+# ================== LOGIN ==================
 def login():
     kesempatan = 3
     while kesempatan > 0:
-        print("\n LOGIN ")
-        user = input("Username: ")
-        pw = input("Password: ")
+        print("\nLOGIN")
+        username = input("Username: ")
+        password = input("Password: ")
 
-        if user in akun and akun[user]["password"] == pw:
-            print("Login berhasil sebagai", akun[user]["role"])
-            return akun[user]["role"]
+        cursor.execute(
+            "SELECT * FROM akun WHERE username=%s AND password=%s",
+            (username, password)
+        )
+        user = cursor.fetchone()
+
+        if user:
+            print("Login berhasil sebagai", user["role"])
+            return user["role"]
         else:
             kesempatan -= 1
             print("Login gagal! Sisa:", kesempatan)
 
     return None
 
-
+# ================== KONFIRMASI ==================
 def konfirmasi():
     jawab = input("Apakah Anda yakin? (y/n): ").lower()
     return jawab == "y"
 
-
-# TAMBAH MOBIL 
+# ================== TAMBAH MOBIL ==================
 def tambah_mobil():
     kode = input("Kode mobil: ")
-
-    for m in data_mobil:
-        if m["kode"] == kode:
-            print("Kode mobil sudah ada.")
-            return
-
     nama = input("Nama mobil: ")
     warna = input("Warna mobil: ")
     harga = int(input("Harga sewa per hari: "))
 
     if konfirmasi():
-        data_mobil.append({
-            "kode": kode,
-            "nama": nama,
-            "warna": warna,
-            "harga": harga,
-            "status": "Tersedia"
-        })
-        print("Mobil berhasil ditambahkan!")
+        try:
+            cursor.execute(
+                "INSERT INTO mobil (kode,nama,warna,harga,status) VALUES (%s,%s,%s,%s,'Tersedia')",
+                (kode, nama, warna, harga)
+            )
+            db.commit()
+            print("Mobil berhasil ditambahkan!")
+        except:
+            print("Kode sudah ada atau terjadi kesalahan.")
     else:
         print("Penambahan dibatalkan.")
 
-
+# ================== LIHAT DATA ==================
 def submenu_lihat_data():
     while True:
-        print("\nSUBMENU LIHAT DATA")
-        print("1. Mobil yang Disewa")
-        print("2. Mobil yang Tersedia")
-        print("3. Kembali")
+        print("\nSUBMENU LIHAT DATA MOBIL")
+        print("1. Lihat Semua Mobil")
+        print("2. Mobil yang Disewa")
+        print("3. Mobil yang Tersedia")
+        print("4. Kembali")
 
         pilih = input("Pilih menu: ")
 
         if pilih == "1":
-            mobil_disewa = [m for m in data_mobil if m["status"] == "Disewa"]
-            print("\nMOBIL YANG DISEWA")
-            tampilkan_tabel(mobil_disewa)
+            cursor.execute("SELECT * FROM mobil")
+            tampilkan_tabel(cursor.fetchall())
 
         elif pilih == "2":
-            mobil_tersedia = [m for m in data_mobil if m["status"] == "Tersedia"]
-            print("\nMOBIL YANG TERSEDIA")
-            tampilkan_tabel(mobil_tersedia)
+            cursor.execute("SELECT * FROM mobil WHERE status='Disewa'")
+            tampilkan_tabel(cursor.fetchall())
 
         elif pilih == "3":
+            cursor.execute("SELECT * FROM mobil WHERE status='Tersedia'")
+            tampilkan_tabel(cursor.fetchall())
+
+        elif pilih == "4":
             break
         else:
             print("Menu tidak valid.")
 
-
-# UPDATE MOBIL
+# ================== UPDATE MOBIL ==================
 def update_mobil():
     kode = input("Masukkan kode mobil: ")
 
-    for m in data_mobil:
-        if m["kode"] == kode:
-            if konfirmasi():
-                m["nama"] = input("Nama baru: ")
-                m["warna"] = input("Warna baru: ")
-                m["harga"] = int(input("Harga baru: "))
-                print("Data berhasil diupdate!")
-            else:
-                print("Update dibatalkan.")
-            return
+    cursor.execute("SELECT * FROM mobil WHERE kode=%s", (kode,))
+    data = cursor.fetchone()
 
-    print("Mobil tidak ditemukan.")
+    if not data:
+        print("Mobil tidak ditemukan.")
+        return
 
+    if konfirmasi():
+        nama = input("Nama baru: ")
+        warna = input("Warna baru: ")
+        harga = int(input("Harga baru: "))
 
-# HAPUS MOBIL
+        cursor.execute(
+            "UPDATE mobil SET nama=%s, warna=%s, harga=%s WHERE kode=%s",
+            (nama, warna, harga, kode)
+        )
+        db.commit()
+        print("Data berhasil diupdate!")
+    else:
+        print("Update dibatalkan.")
+
+# ================== HAPUS MOBIL ==================
 def hapus_mobil():
     kode = input("Masukkan kode mobil: ")
 
-    for m in data_mobil:
-        if m["kode"] == kode:
+    cursor.execute("SELECT status FROM mobil WHERE kode=%s", (kode,))
+    data = cursor.fetchone()
 
-            if m["status"] == "Disewa":
-                print("Mobil sedang disewa dan tidak bisa dihapus!")
-                return
+    if not data:
+        print("Mobil tidak ditemukan.")
+        return
 
-            if konfirmasi():
-                data_mobil.remove(m)
-                print("Mobil berhasil dihapus!")
-            else:
-                print("Penghapusan dibatalkan.")
-            return
+    if data["status"] == "Disewa":
+        print("Mobil sedang disewa dan tidak bisa dihapus!")
+        return
 
-    print("Mobil tidak ditemukan.")
+    if konfirmasi():
+        cursor.execute("DELETE FROM mobil WHERE kode=%s", (kode,))
+        db.commit()
+        print("Mobil berhasil dihapus!")
+    else:
+        print("Penghapusan dibatalkan.")
 
-
-# SEWA MOBIL
+# ================== SEWA MOBIL ==================
 def sewa_mobil():
-    mobil_tersedia = [m for m in data_mobil if m["status"] == "Tersedia"]
+    cursor.execute("SELECT * FROM mobil WHERE status='Tersedia'")
+    mobil_tersedia = cursor.fetchall()
 
     if not mobil_tersedia:
         print("Tidak ada mobil tersedia.")
         return
 
-    print("\n MOBIL TERSEDIA ")
     tampilkan_tabel(mobil_tersedia)
-
     kode = input("Masukkan kode mobil yang ingin disewa: ")
 
-    for m in mobil_tersedia:
-        if m["kode"] == kode:
-            hari = int(input("Berapa hari sewa: "))
-            total = m["harga"] * hari
+    cursor.execute("SELECT * FROM mobil WHERE kode=%s AND status='Tersedia'", (kode,))
+    mobil = cursor.fetchone()
 
-            print("\n RINCIAN SEWA ")
-            print("Mobil :", m["nama"])
-            print("Harga per hari :", m["harga"])
-            print("Lama sewa :", hari, "hari")
-            print("Total bayar : Rp", format(total, ","))
-
-            if konfirmasi():
-                m["status"] = "Disewa"
-                print("Mobil berhasil disewa!")
-            else:
-                print("Sewa dibatalkan.")
-            return
-
-    print("Kode mobil tidak ditemukan atau tidak tersedia.")
-
-
-# KEMBALIKAN MOBIL
-def kembalikan_mobil():
-    mobil_disewa = [m for m in data_mobil if m["status"] == "Disewa"]
-
-    if not mobil_disewa:
-        print("Tidak ada mobil yang sedang disewa.")
+    if not mobil:
+        print("Mobil tidak tersedia.")
         return
 
-    print("\nMOBIL YANG DISEWA ")
-    tampilkan_tabel(mobil_disewa)
+    hari = int(input("Berapa hari sewa: "))
+    total = mobil["harga"] * hari
 
+    print("\nRINCIAN SEWA")
+    print("Mobil :", mobil["nama"])
+    print("Total bayar : Rp", format(total, ","))
+
+    if konfirmasi():
+        cursor.execute(
+            "UPDATE mobil SET status='Disewa' WHERE kode=%s",
+            (kode,)
+        )
+        db.commit()
+        print("Mobil berhasil disewa!")
+    else:
+        print("Sewa dibatalkan.")
+
+# ================== KEMBALIKAN ==================
+def kembalikan_mobil():
+    cursor.execute("SELECT * FROM mobil WHERE status='Disewa'")
+    mobil_disewa = cursor.fetchall()
+
+    if not mobil_disewa:
+        print("Tidak ada mobil yang disewa.")
+        return
+
+    tampilkan_tabel(mobil_disewa)
     kode = input("Masukkan kode mobil yang dikembalikan: ")
 
-    for m in mobil_disewa:
-        if m["kode"] == kode:
-            if konfirmasi():
-                m["status"] = "Tersedia"
-                print("Mobil berhasil dikembalikan!")
-            else:
-                print("Pengembalian dibatalkan.")
-            return
+    if konfirmasi():
+        cursor.execute(
+            "UPDATE mobil SET status='Tersedia' WHERE kode=%s",
+            (kode,)
+        )
+        db.commit()
+        print("Mobil berhasil dikembalikan!")
 
-    print("Kode mobil tidak ditemukan.")
-
-
-#  SEARCH USER 
-def search_mobil():
-    keyword = input("Cari berdasarkan kode, nama, atau warna: ").lower()
-
-    hasil = [
-        m for m in data_mobil
-        if m["status"] == "Tersedia" and
-        (keyword in m["kode"].lower() or
-         keyword in m["nama"].lower() or
-         keyword in m["warna"].lower())
-    ]
-
-    if hasil:
-        print("\nHASIL PENCARIAN")
-        tampilkan_tabel(hasil)
-    else:
-        print("Mobil tidak ditemukan atau tidak tersedia.")
-
-
-# MENU 
+# ================== MENU ==================
 def menu_awal():
-    print("\n SISTEM RENTAL MOBIL ")
+    print("\nSISTEM RENTAL MOBIL")
     print("1. Login")
     print("2. Keluar")
 
-
 def menu_admin():
-    print("\n MENU ADMIN ")
+    print("\nMENU ADMIN")
     print("1. Tambah Mobil")
     print("2. Lihat Data Mobil")
     print("3. Update Mobil")
     print("4. Hapus Mobil")
     print("5. Logout")
 
-
 def menu_user():
-    print("\n MENU USER ")
-    print("1. Cari Mobil")
-    print("2. Sewa Mobil")
-    print("3. Kembalikan Mobil")
-    print("4. Logout")
+    print("\nMENU USER")
+    print("1. Sewa Mobil")
+    print("2. Kembalikan Mobil")
+    print("3. Logout")
 
-
-#  MAIN
-jalan_program = True
-
-while jalan_program:
-
+# ================== MAIN ==================
+while True:
     menu_awal()
     pilih_awal = input("Pilih menu: ")
 
@@ -268,7 +246,6 @@ while jalan_program:
                 elif pilih == "4":
                     hapus_mobil()
                 elif pilih == "5":
-                    print("Logout berhasil.")
                     break
                 else:
                     print("Menu tidak valid.")
@@ -279,20 +256,16 @@ while jalan_program:
                 pilih = input("Pilih menu: ")
 
                 if pilih == "1":
-                    search_mobil()
-                elif pilih == "2":
                     sewa_mobil()
-                elif pilih == "3":
+                elif pilih == "2":
                     kembalikan_mobil()
-                elif pilih == "4":
-                    print("Logout berhasil.")
+                elif pilih == "3":
                     break
                 else:
                     print("Menu tidak valid.")
 
     elif pilih_awal == "2":
         print("Program selesai.")
-        jalan_program = False
-
+        break
     else:
         print("Menu tidak valid.")
