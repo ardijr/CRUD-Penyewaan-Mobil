@@ -1,44 +1,127 @@
-# CRUD-Penyewaan-Mobil
+Aplikasi CRUD Python untuk Sistem Manajemen Rental Mobil
 
-Program ini adalah sistem rental mobil sederhana berbasis Command Line Interface (CLI) menggunakan Python.  
-Sistem ini menerapkan konsep CRUD, login berbasis role (admin & user), serta perhitungan biaya sewa tanpa menggunakan database.
+Aplikasi berbasis Python untuk mengelola data rental mobil menggunakan konsep Create, Read, Update, Delete (CRUD) dengan database MySQL sebagai penyimpanan data.
 
+Business Understanding
 
-## 📌 Gambaran Umum
+Proyek ini dibuat untuk industri rental mobil, yang membutuhkan sistem terstruktur untuk mengelola data kendaraan dan akun pengguna secara efisien.
 
-Aplikasi ini memiliki dua jenis pengguna:
+Dalam bisnis rental mobil, pengelolaan data kendaraan sangat penting karena berkaitan langsung dengan:
 
-- **Admin** → Mengelola data mobil
-- **User** → Mencari, menyewa, dan mengembalikan mobil
+Ketersediaan mobil
 
-Semua data disimpan sementara di dalam program (menggunakan list dan dictionary).
+Harga sewa
 
-## 🎯 Fitur Utama
+Status kendaraan (Tersedia / Disewa)
 
-### 🔐 Sistem Login
-- Login menggunakan username dan password
-- Maksimal 3 kali percobaan login
-- Menu berbeda sesuai role (admin/user)
-- Logout kembali ke menu utama
+Kontrol akses pengguna sistem
 
-### 👨‍💼 Fitur Admin
-- Menambah mobil baru
-- Melihat semua data mobil
-- Melihat mobil yang sedang disewa
-- Melihat mobil yang tersedia
-- Mengupdate data mobil
-- Menghapus data mobil
-- Konfirmasi sebelum aksi penting (update/hapus/tambah)
+Tanpa sistem yang terorganisir, pengelolaan data dapat menimbulkan kesalahan pencatatan, duplikasi data, dan kesulitan dalam memantau status kendaraan.
 
-### 👤 Fitur User
-- Mencari mobil berdasarkan kode atau nama
-- Menyewa mobil
-- Mengembalikan mobil
-- Sistem otomatis menghitung total biaya sewa
+Manfaat Sistem
 
-## 🧱 Struktur Penyimpanan Data
+Meningkatkan akurasi dan konsistensi data
 
-Data mobil disimpan dalam list:
+Mempermudah pengelolaan kendaraan
 
-```python
-data_mobil = []
+Memantau status mobil secara real-time
+
+Mengurangi kesalahan manual
+
+Membatasi akses sistem berdasarkan peran pengguna
+
+Target Pengguna
+
+Aplikasi ini dirancang untuk:
+
+1. Admin
+
+Menambah data mobil
+
+Melihat daftar mobil
+
+Mengubah data mobil
+
+Menghapus data mobil
+
+2. User
+
+Melihat daftar mobil yang tersedia
+
+Sistem menggunakan mekanisme login untuk membedakan hak akses antara admin dan user.
+
+Fitur Aplikasi
+1. Sistem Login
+
+Login menggunakan username dan password
+
+Role-based access (admin dan user)
+
+Hak akses dibatasi sesuai peran
+
+2. Create (Tambah Data)
+
+Menambahkan data mobil baru dengan informasi:
+
+Kode mobil (unik)
+
+Nama mobil
+
+Warna
+
+Harga sewa
+
+Status (default: Tersedia)
+
+Validasi:
+
+Kode mobil tidak boleh duplikat
+
+Field wajib tidak boleh kosong
+
+3. Read (Lihat Data)
+
+Menampilkan seluruh data mobil
+
+Melihat status mobil (Tersedia / Disewa)
+
+Menampilkan data dalam format yang mudah dibaca
+
+4. Update (Ubah Data)
+
+Mengubah nama mobil
+
+Mengubah warna
+
+Mengubah harga sewa
+
+Mengubah status mobil
+
+Sistem memberikan konfirmasi jika update berhasil atau gagal.
+
+5. Delete (Hapus Data)
+
+Menghapus data mobil
+
+Hanya bisa dilakukan oleh admin
+
+Sistem akan menolak jika data tidak ditemukan
+
+Keamanan
+
+Autentikasi pengguna melalui tabel akun
+
+Pembatasan akses berdasarkan role
+
+Admin memiliki akses penuh terhadap data
+
+User hanya memiliki akses baca
+
+Instalasi
+Prasyarat
+
+Python 3.11 atau versi yang kompatibel
+
+MySQL Server
+
+mysql-connector-python
